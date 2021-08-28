@@ -73,16 +73,31 @@ const Modal = (props) => {
             aria-labelledby="alert-dialog-slide-title"
             aria-describedby="alert-dialog-slide-description"
         >
-            <DialogTitle id="alert-dialog-slide-title">{"Add a category"}</DialogTitle>
+            <DialogTitle id="alert-dialog-slide-title">{props.titleModal}</DialogTitle>
             <DialogContent>
                 <DialogContentText id="alert-dialog-slide-description">
                     {props.children}
                 </DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button onClick={props.ButtonHandleClose} color="primary">
-                    Add
-                </Button>
+                {
+                    props.buttons ? props.buttons.map((btn, index) => {
+                        return (
+                            <Button onClick={btn.ButtonHandleClose} color={btn.type} key={index}>
+                                {btn.titleButton}
+                            </Button>
+                        )
+                    }) :
+                        <Button
+                            onClick={props.ButtonHandleClose}
+                            color="primary"
+                            startIcon={props.startIcon}
+                            endIcon={props.endIcon}
+                        >
+                            {props.titleButton}
+                        </Button>
+                }
+
             </DialogActions>
         </Dialog>
     );

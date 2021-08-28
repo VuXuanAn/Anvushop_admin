@@ -9,7 +9,7 @@ const initState = {
 const buildNewCategories = (parentId, categories, category) => {
     let myCategories = [];
 
-    if (parentId == undefined) {
+    if (parentId === undefined) {
         return [
             ...categories,
             {
@@ -24,7 +24,7 @@ const buildNewCategories = (parentId, categories, category) => {
 
     for (let cat of categories) {
 
-        if (cat._id == parentId) {
+        if (cat._id === parentId) {
             const newCategory = {
                 _id: category._id,
                 name: category.name,
@@ -50,8 +50,6 @@ const buildNewCategories = (parentId, categories, category) => {
 
     return myCategories;
 }
-
-
 export default (state = initState, action) => {
     switch (action.type) {
         case categoryConstansts.GET_ALL_CATEGORIES_SUCCESS:
@@ -81,6 +79,44 @@ export default (state = initState, action) => {
         case categoryConstansts.ADD_NEW_CATEGORY_FAILURE:
             state = {
                 ...initState,
+                loading: false,
+                error: action.payload.error
+            }
+            break;
+        case categoryConstansts.UPDATE_CATEGORIES_REQUEST:
+            state = {
+                ...state,
+                loading: true
+            }
+            break;
+        case categoryConstansts.UPDATE_CATEGORIES_SUCCESS:
+            state = {
+                ...state,
+                loading: false
+            }
+            break;
+        case categoryConstansts.UPDATE_CATEGORIES_FAILURE:
+            state = {
+                ...state,
+                error: action.payload.error,
+                loading: false
+            }
+            break;
+        case categoryConstansts.DELETE_CATEGORIES_REQUEST:
+            state = {
+                ...state,
+                loading: true
+            }
+            break;
+        case categoryConstansts.DELETE_CATEGORIES_SUCCESS:
+            state = {
+                ...state,
+                loading: false
+            }
+            break;
+        case categoryConstansts.DELETE_CATEGORIES_FAILURE:
+            state = {
+                ...state,
                 loading: false,
                 error: action.payload.error
             }

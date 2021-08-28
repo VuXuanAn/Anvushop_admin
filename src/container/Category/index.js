@@ -1,99 +1,40 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { addCategory } from '../../actions';
+import { addCategory, deleteCategories, getAllCategory, updateCategory } from '../../actions';
 import Layout from '../../component/Layout';
 import Button from '@material-ui/core/Button';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import Slide from '@material-ui/core/Slide';
-import TextField from '@material-ui/core/TextField';
-import Select from '@material-ui/core/Select';
-import NativeSelect from '@material-ui/core/NativeSelect';
-import InputBase from '@material-ui/core/InputBase';
-import { withStyles, makeStyles } from '@material-ui/core/styles';
 import { Container, Grid } from '@material-ui/core';
 import Modal from './../../component/UI/Modal'
-const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="down" ref={ref} {...props} />;
-});
+import UpdateCategoriesModal from './components/UpdateCategoriesModal'
+import CheckboxTree from 'react-checkbox-tree';
+import AddIcon from '@material-ui/icons/Add';
+import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@material-ui/icons/Delete';
+import 'react-checkbox-tree/lib/react-checkbox-tree.css';
+import CategoryAddModal from './components/AddCategoryModal';
 
 
-const useStyles = makeStyles((theme) => ({
-    root: {
-        '& > *': {
-            marginTop: '20px'
-        },
-    },
-    input: {
-        display: 'none',
-
-    },
-    button: {
-        marginTop: '20px!important'
-    }
-}));
-
-
-const BootstrapInput = withStyles((theme) => ({
-    root: {
-        'label + &': {
-            marginTop: theme.spacing(3),
-        },
-    },
-    upload: {
-        marginTop: '20px!important',
-    },
-    input: {
-        marginTop: '20px',
-        display: 'block',
-        width: '100%',
-        borderRadius: 4,
-        position: 'relative',
-        backgroundColor: theme.palette.background.paper,
-        border: '1px solid #ced4da',
-        fontSize: 16,
-        padding: '10px 26px 10px 12px',
-        transition: theme.transitions.create(['border-color', 'box-shadow']),
-        // Use the system font instead of the default Roboto font.
-        fontFamily: [
-            '-apple-system',
-            'BlinkMacSystemFont',
-            '"Segoe UI"',
-            'Roboto',
-            '"Helvetica Neue"',
-            'Arial',
-            'sans-serif',
-            '"Apple Color Emoji"',
-            '"Segoe UI Emoji"',
-            '"Segoe UI Symbol"',
-        ].join(','),
-        '&:focus': {
-            borderRadius: 4,
-            borderColor: '#80bdff',
-            boxShadow: '0 0 0 0.2rem rgba(0,123,255,.25)',
-        },
-    },
-}))(InputBase);
 
 const Category = () => {
-    const classes = useStyles();
     const dispatch = useDispatch();
     const category = useSelector(state => state.category)
-
+    const [checked, setchecked] = useState([]);
+    const [expanded, setexpanded] = useState([]);
+    const [updateCategoryStatus, setupdateCategoryStatus] = useState(false)
+    const [checkArray, setCheckArray] = useState([]);
+    const [expandArray, setexpandArray] = useState([])
+    const [DeleteStatusModal, setDeleteStatusModal] = useState(false);
 
 
     const renderCategories = (categories) => {
         let myCategories = [];
         for (let category of categories) {
             myCategories.push(
-                <li key={category.name} onClick={handleClickOpen}>
-                    {category.name}
-                    {category.children.length > 0 ? (
-                        <ul>
-                            {renderCategories(category.children)}
-                        </ul>
-                    ) : null}
-                </li>
+                {
+                    label: category.name,
+                    value: category._id,
+                    children: category.children.length > 0 && renderCategories(category.children)
+                }
             );
         }
         return myCategories;
@@ -134,63 +75,192 @@ const Category = () => {
     const [categoryParentid, setcategoryParentid] = useState('');
     const [categoryImage, setcategoryImage] = useState('');
 
+
     const handleCategoryImage = (e) => {
         setcategoryImage(e.target.files[0])
     }
+
+    const updateCategoryStatusHandler = () => {
+        updateCheckedAndExpandedCategory()
+        setupdateCategoryStatus(true)
+    }
+    const updateCheckedAndExpandedCategory = () => {
+        const checkedArray = [];
+        const expandedArray = [];
+        const categories = createCategoryList(category.categories);
+        checked.length > 0 && checked.forEach((categoryId, index) => {
+            const category = categories.find((category, _index) => categoryId === category.value)
+            category && checkedArray.push(category)
+        })
+
+        expanded.length > 0 && expanded.forEach((categoryId, index) => {
+            const category = categories.find((category, _index) => categoryId == category.value)
+            category && expandedArray.push(category)
+        })
+        setCheckArray(checkedArray)
+        setexpandArray(expandedArray)
+    }
+
+
+    const handleCategoryInput = (key, value, index, type) => {
+        if (type === 'checked') {
+            const updateCheckArray = checkArray.map((item, _index) => index === _index ? { ...item, [key]: value } : item);
+            setCheckArray(updateCheckArray)
+        } else if (type === "expanded") {
+            const updateExpandArray = expandArray.map((item, _index) => index === _index ? { ...item, [key]: value } : item);
+            setexpandArray(updateExpandArray)
+        }
+    }
+    const updateCategoryHandler = (e) => {
+        e.preventDefault();
+        const form = new FormData();
+        expandArray.forEach((item, index) => {
+            form.append('_id', item.value)
+            form.append('name', item.name)
+            form.append('type', item.type)
+            form.append('parentId', item.parentId ? item.parentId : "")
+        })
+        checkArray.forEach((item, index) => {
+            form.append('_id', item.value)
+            form.append('name', item.name)
+            form.append('type', item.type)
+            form.append('parentId', item.parentId ? item.parentId : "")
+        })
+        dispatch(updateCategory(form)).then(result => {
+            if (result) {
+                dispatch(getAllCategory())
+            }
+        })
+        setupdateCategoryStatus(false)
+    }
+    // delete category 
+
+    const onDeleteCategory = () => {
+        const CheckedIdsArray = checkArray.map((item, index) => ({ _id: item.value }));
+        const ExpandedIdsArray = expandArray.map((item, index) => ({ _id: item.value }));
+        const idsArray = ExpandedIdsArray.concat(CheckedIdsArray);
+        if (CheckedIdsArray.length > 0) {
+            dispatch(deleteCategories(idsArray))
+                .then(result => {
+                    if (result) {
+                        dispatch(getAllCategory())
+                        setDeleteStatusModal(false)
+                    }
+                })
+        }
+    }
+    const renderDeleteCategory = () => {
+        return (
+            <Modal
+                open={DeleteStatusModal}
+                titleModal="Xóa danh mục"
+                buttons={[
+                    {
+                        type: "secondary",
+                        titleButton: "Cancel",
+                        ButtonHandleClose: () => {
+                            alert('No')
+                        }
+                    },
+                    {
+                        type: "primary",
+                        titleButton: "Delete",
+                        ButtonHandleClose: onDeleteCategory
+                    },
+                ]}
+                onClose={() => setDeleteStatusModal(false)}
+            >
+                <h2> Are you sure ?</h2>
+            </Modal>
+        )
+    }
+
+    const deleteCategoryHandler = () => {
+        updateCheckedAndExpandedCategory()
+        setDeleteStatusModal(true);
+    }
+
+
+    useEffect(() => {
+        if (category.loading) {
+            setOpen(false);
+        }
+    }, [category.loading]);
+
     return (
         <Layout sidebar>
             <Container>
                 <h1>Category List</h1>
-                <Button onClick={handleClickOpen} color="primary" variant="contained">
+                <Button
+                    onClick={handleClickOpen}
+                    color="primary"
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                >
                     Add a new category
                 </Button>
                 <div style={{ marginTop: '50px' }}>
 
-                    {renderCategories(category.categories)}
+                    <CheckboxTree
+                        nodes={renderCategories(category.categories)}
+                        checked={checked}
+                        expanded={expanded}
+                        onCheck={checked => setchecked(checked)}
+                        onExpand={expanded => setexpanded(expanded)}
+                    />
                 </div>
+                <Grid style={{ marginTop: '20px' }}>
+                    <Button
+                        color="primary"
+                        variant="outlined"
+                        style={{ marginRight: '20px' }}
+                        onClick={updateCategoryStatusHandler}
+                        startIcon={<EditIcon />}
+                    >
+
+                        Sửa danh mục
+                    </Button>
+                    <Button
+                        color="secondary"
+                        variant="outlined"
+                        onClick={deleteCategoryHandler}
+                        startIcon={<DeleteIcon />}
+                    >
+                        Xóa danh mục
+                    </Button>
+                </Grid>
 
 
 
-                <Modal
-                    open={open}
-                    onClose={handleClose}
-                    ButtonHandleClose={handleClose}
-                >
-                    <div>
-                        <Grid item>
-                            <TextField
-                                id="standard-basic"
-                                label="Category"
-                                value={categoryName}
-                                onChange={e => setcategoryName(e.target.value)}
-                            />
-                        </Grid>
-                        <Grid>
-                            <NativeSelect
-                                id="demo-customized-select-native"
-                                input={<BootstrapInput />}
-                                fullWidth
-                                value={categoryParentid}
-                                onChange={e => { setcategoryParentid(e.target.value) }}
-                                label="parent category"
-                            >
-                                <option aria-label="select" value="" />
-                                {
-                                    createCategoryList(category.categories).map(option2 => {
-                                        return <option key={option2.value} value={option2.value} >{option2.name}</option>
-                                    })
-                                }
-                            </NativeSelect>
-                        </Grid>
-                        <input
-                            accept="image/*"
-                            className={classes.upload}
-                            type="file"
+                <CategoryAddModal
+                    CategoryStatus={open}
+                    titleModal="Thêm sản phẩm"
+                    titleButton="Thêm"
+                    close={() => setOpen(false)}
+                    CloseHanlder={handleClose}
+                    categoryList={createCategoryList(category.categories)}
+                    CategoryName={categoryName}
+                    setCategoryName={setcategoryName}
+                    ParentIdCategory={categoryParentid}
+                    setParentIdCategory={setcategoryParentid}
+                    handleCategoryImage={handleCategoryImage}
+                />
+                <UpdateCategoriesModal
+                    titleModal="Sửa danh mục"
+                    titleButton="Sửa"
+                    close={() => setupdateCategoryStatus(false)}
+                    CategoryStatus={updateCategoryStatus}
+                    CloseHanlder={updateCategoryHandler}
+                    categoryList={createCategoryList(category.categories)}
+                    expandArray={expandArray}
+                    checkArray={checkArray}
+                    handleCategoryInput={handleCategoryInput}
+                />
 
-                            onChange={handleCategoryImage}
-                        />
-                    </div>
-                </Modal>
+
+                {renderDeleteCategory()}
+
+
             </Container>
         </Layout >
     );

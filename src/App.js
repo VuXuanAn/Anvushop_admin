@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getInitialData, isUserLoggedIn } from './actions';
 import Categories from './container/Category'
 import Order from './container/Order'
+import NewPage from './container/NewPage';
 
 const App = () => {
 
@@ -19,15 +20,18 @@ const App = () => {
     if (!auth.authenticate) {
       dispatch(isUserLoggedIn())
     }
-    if (!auth.authenticate) {
+    if (auth.authenticate) {
       dispatch(getInitialData());
     }
-  }, []);
+  }, [auth.authenticate]);
+
+
   return (
     <div className="App">
       <Switch>
         <PrivateRoute exact path="/" component={Home} />
         <PrivateRoute exact path="/products" component={Product} />
+        <PrivateRoute exact path="/page" component={NewPage} />
         <PrivateRoute exact path="/orders" component={Order} />
         <PrivateRoute exact path="/categories" component={Categories} />
 

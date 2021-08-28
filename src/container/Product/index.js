@@ -12,6 +12,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { addProduct } from '../../actions/product';
 import Modal from './../../component/UI/Modal'
 import { generatePictureUrl } from '../../configUrl';
+import AddIcon from '@material-ui/icons/Add';
 const useStyles = makeStyles((theme) => ({
     root: {
         width: '100%',
@@ -167,7 +168,13 @@ const Product = () => {
                     id="panel1a-header"
                 >
                     <Typography >
-                        <Button color="primary" variant="contained"> Add product</Button>
+                        <Button
+                            color="primary"
+                            variant="contained"
+                            startIcon={<AddIcon />}
+
+                        >
+                            Add product</Button>
                     </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
@@ -255,10 +262,6 @@ const Product = () => {
 
         );
     }
-
-    const handleClose = () => {
-        setdetaiProductModal(false)
-    }
     const showProductDetailModal = (product) => {
         setdetaiProductModal(true)
         setProductDetail(product);
@@ -270,8 +273,8 @@ const Product = () => {
         return (
             <Modal
                 open={detaiProductModal}
-                onClose={handleClose}
-                ButtonHandleClose={handleClose}
+                onClose={() => setdetaiProductModal(false)}
+                ButtonHandleClose={() => setdetaiProductModal(false)}
             >
                 <Grid spacing={3} container>
                     <Grid item xs={6}>

@@ -30,6 +30,26 @@ const Layout = (props) => {
                         <Grid item sm={2} className={classes.list}>
                             <div >
                                 <List component="nav" aria-label="main mailbox folders">
+
+                                    <ListItem button>
+                                        <ListItemIcon>
+                                            <DraftsIcon />
+                                        </ListItemIcon>
+                                        <NavLink
+                                            exact
+                                            to='/'
+                                            className={classes.nav}
+                                            activeStyle={{
+                                                fontWeight: "bold",
+                                                color: 'red'
+                                            }}
+                                        >
+                                            <ListItemText primary="Home" />
+                                        </NavLink>
+
+                                    </ListItem>
+
+
                                     <ListItem button>
                                         <ListItemIcon>
                                             <InboxIcon />
@@ -66,14 +86,14 @@ const Layout = (props) => {
                                             <DraftsIcon />
                                         </ListItemIcon>
                                         <NavLink
-                                            to='home'
+                                            to='page'
                                             className={classes.nav}
                                             activeStyle={{
                                                 fontWeight: "bold",
                                                 color: 'red'
                                             }}
                                         >
-                                            <ListItemText primary="Home" />
+                                            <ListItemText primary="Page" />
                                         </NavLink>
 
                                     </ListItem>
